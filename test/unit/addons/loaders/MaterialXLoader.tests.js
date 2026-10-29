@@ -737,6 +737,9 @@ export default QUnit.module( 'Addons', () => {
 
 			QUnit.test( 'supports hsvadjust, facingratio and triplanarprojection', ( assert ) => {
 
+				const manager = new LoadingManager();
+				manager.addHandler( /\.test$/i, new ControlledTextureLoader( manager ) );
+
 				const nodes = [
 					'<hsvadjust name="test_node" type="color3"><input name="amount" type="vector3" value="0.5, 1, 1" /></hsvadjust>',
 					'<hsvadjust name="test_node" type="color4"><input name="in" type="color4" value="1, 0, 0, 0.5" /></hsvadjust>',
@@ -754,7 +757,7 @@ export default QUnit.module( 'Addons', () => {
 		<output name="out" type="${ type }" nodename="test_node" />
 	</nodegraph>
 </materialx>`;
-					const result = new MaterialXLoader().parse( text, { throwOnErrors: false } );
+					const result = new MaterialXLoader( manager ).parse( text, { throwOnErrors: false } );
 					assert.deepEqual( result.errors.map( ( error ) => error.message ), [], `${ /<(\w+)/.exec( node )[ 1 ] } ${ type } is supported.` );
 
 				}

@@ -7,6 +7,7 @@
 		<link rel="shortcut icon" href="../files/favicon_white.ico" media="(prefers-color-scheme: dark)"/>
 		<link rel="shortcut icon" href="../files/favicon.ico" media="(prefers-color-scheme: light)" />
 		<link rel="stylesheet" type="text/css" href="../files/main.css">
+		<link rel="stylesheet" type="text/css" href="resources/navigation.css">
 		<!-- console sandbox -->
 		<script type="module">
 			import * as THREE from '../build/three.module.js';
@@ -40,6 +41,8 @@
 
 		</div>
 
+		<div id="panelResizeHandle" role="separator" aria-label="Navigation width" aria-orientation="vertical" aria-controls="panel" tabindex="0"></div>
+
 		<iframe name="viewer"></iframe>
 
 		<script>
@@ -50,7 +53,81 @@
 		const clearSearchButton = document.querySelector( '#clearSearchButton' );
 		const panelScrim = document.querySelector( '#panelScrim' );
 		const filterInput = document.querySelector( '#filterInput' );
+		const panelResizeHandle = document.querySelector( '#panelResizeHandle' );
 		let iframe = document.querySelector( 'iframe' );
+		let panelWidth;
+		let dragOffset = 0;
+
+		function updatePanelWidth() {
+
+			const isDesktop = window.innerWidth > 640;
+			const min = 280;
+			const max = Math.max( min, Math.min( 640, window.innerWidth - 320 ) );
+
+			if ( isDesktop && panelWidth !== undefined ) {
+
+				panelWidth = Math.max( min, Math.min( max, panelWidth ) );
+				document.documentElement.style.setProperty( '--panel-width', `${panelWidth}px` );
+
+			}
+
+			const width = getComputedStyle( panel ).width;
+			panelResizeHandle.setAttribute( 'aria-valuemin', min );
+			panelResizeHandle.setAttribute( 'aria-valuemax', max );
+			panelResizeHandle.setAttribute( 'aria-valuenow', parseFloat( width ) );
+
+			if ( iframe.contentDocument ) {
+
+				iframe.contentDocument.documentElement.style.setProperty( '--panel-width', isDesktop ? width : '0px' );
+
+			}
+
+		}
+
+		panelResizeHandle.addEventListener( 'pointerdown', ( event ) => {
+
+			if ( event.button !== 0 ) return;
+			event.preventDefault();
+			dragOffset = event.clientX - panel.getBoundingClientRect().width;
+			panelResizeHandle.setPointerCapture( event.pointerId );
+			document.body.classList.add( 'resizingPanel' );
+
+		} );
+
+		panelResizeHandle.addEventListener( 'pointermove', ( event ) => {
+
+			if ( ! panelResizeHandle.hasPointerCapture( event.pointerId ) ) return;
+			panelWidth = event.clientX - dragOffset;
+			updatePanelWidth();
+
+		} );
+
+		function stopPanelResize( event ) {
+
+			if ( panelResizeHandle.hasPointerCapture( event.pointerId ) ) {
+
+				panelResizeHandle.releasePointerCapture( event.pointerId );
+
+			}
+
+			document.body.classList.remove( 'resizingPanel' );
+
+		}
+
+		panelResizeHandle.addEventListener( 'pointerup', stopPanelResize );
+		panelResizeHandle.addEventListener( 'pointercancel', stopPanelResize );
+		panelResizeHandle.addEventListener( 'lostpointercapture', stopPanelResize );
+		panelResizeHandle.addEventListener( 'keydown', ( event ) => {
+
+			if ( event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' ) return;
+			event.preventDefault();
+			panelWidth = panel.getBoundingClientRect().width + ( event.key === 'ArrowLeft' ? - 10 : 10 );
+			updatePanelWidth();
+
+		} );
+
+		window.addEventListener( 'resize', updatePanelWidth );
+		updatePanelWidth();
 
 		const pageProperties = {};
 		const titles = {};
@@ -476,6 +553,7 @@
 
 			const oldIframe = iframe;
 			iframe = oldIframe.cloneNode();
+			iframe.addEventListener( 'load', updatePanelWidth );
 
 			if ( hash ) {
 

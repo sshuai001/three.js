@@ -1,0 +1,47 @@
+#panelResizeHandle {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: calc(var(--panel-width) - 4px);
+	width: 8px;
+	z-index: 101;
+	cursor: col-resize;
+	touch-action: none;
+}
+
+#panelResizeHandle:hover,
+#panelResizeHandle:focus-visible,
+.resizingPanel #panelResizeHandle {
+	background-color: var(--color-blue);
+}
+
+#panel #content {
+	overflow-wrap: anywhere;
+}
+
+#panel #header,
+#panel #inputWrapper {
+	flex-shrink: 0;
+}
+
+#panel #filterInput {
+	min-width: 0;
+}
+
+body.resizingPanel {
+	cursor: col-resize;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.resizingPanel iframe {
+	pointer-events: none;
+}
+
+@media all and ( max-width: 640px ) {
+
+	#panelResizeHandle {
+		display: none;
+	}
+
+}
